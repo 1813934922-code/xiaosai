@@ -12,7 +12,7 @@ PENDULUM_CTRL pendulum_ctrl;
 void init_pendulum(void) {
     // 1. 初始化三个环的 PID (参数需上车实调)
     // 直立环: PD控制 (极速响应，不需要积分)
-    pendulum_ctrl.upright_pid = init_pid(135.0f, 0.0f, 0.0f, 5.0f, 5000);
+    pendulum_ctrl.upright_pid = init_pid(210.0f, 0.0f, 10.0f, 5.0f, 5000);
     // 速度环: PI控制 (正反馈机制，缓慢拉回原点，不需要微分)
     pendulum_ctrl.speed_pid   = init_pid(15.0f, 0.5f, 0.0f, 5.0f, 2000);
     // 寻迹环: PD控制 (普通循迹)
