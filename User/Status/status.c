@@ -73,8 +73,8 @@ void driver_status(STATUS *status) {
     driver_LED(&status->device.led1);
     driver_LED(&status->device.led2);
     driver_LED(&status->device.led3);
-    // driver_wheel(&status->motor.wheel[0]);
-    // driver_wheel(&status->motor.wheel[1]);
+    //driver_wheel(&status->motor.wheel[0]);
+    //driver_wheel(&status->motor.wheel[1]);
     //driver_gw_analogue(&status->sensor.gw_analogue);
     driver_BUZZER(&status->device.buzzer1);
     get_gyr_raw_data(&hi2c1,&status->sensor.gyr);

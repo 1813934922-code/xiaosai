@@ -1065,7 +1065,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     //status.motor.wheel[1].trust = 400;
     //status.motor.wheel[0].tar_speed = 90;
     //status.motor.wheel[1].tar_speed = 90;
-    update_wheel_speed_control();
+    //update_wheel_speed_control();
     if (status.state.time % 5 == 0)
     {
       driver_gw_analogue(&status.sensor.gw_analogue);
@@ -1075,6 +1075,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     }
     if (status.state.time % 10 == 0) {
       driver_status(&status);
+      update_wheel_speed_control();
       get_gw_analogue_analogue_diff(&status.sensor.gw_analogue);
       //follow(90);
       task_handler();

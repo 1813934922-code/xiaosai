@@ -5,11 +5,11 @@
 #include "pid.h"
 #include "tim.h"
 
-#define ENCODER_LINES 500
-#define GEAR_RATIO 20
+#define ENCODER_LINES 13
+#define GEAR_RATIO 30
 #define ENCODER_PPR (ENCODER_LINES * 4)
 #define MOTOR_REDUCTION (ENCODER_PPR * GEAR_RATIO)
-#define PID_HZ 1000.0f
+#define PID_HZ 100.0f
 #define TRUST_CONFINE 1000
 #define BASE_SPEED 90
 
