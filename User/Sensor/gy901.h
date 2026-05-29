@@ -19,6 +19,10 @@
 #define MODE_6AXIS    0x0001 // 6轴算法
 #define SAVE_CMD      0x0000 // 保存指令
 
+#define REG_CALSW     0x01   // 校准模式寄存器
+#define CAL_NORMAL    0x00   // 正常工作模式
+#define CAL_ANGLE_REF 0x08   // 设置角度参考模式
+
 // 新增函数声明
 void write_gyr_reg(I2C_HandleTypeDef *i2c, uint8_t reg, uint16_t data);
 void set_gyr_6axis_mode(I2C_HandleTypeDef *i2c);
@@ -51,5 +55,7 @@ void get_gyr_raw_data(I2C_HandleTypeDef *i2c, GYR *gyr);
 float get_gyr_value(GYR *gyr, enum gyroscope key);
 // 初始化gyr 放在init_sensor()中
 void init_gyr(GYR *gyr);
+
+void set_gyr_angle_reference(I2C_HandleTypeDef *i2c);
 
 #endif /* !__GYROSCOPE_H__ */

@@ -28,7 +28,9 @@ add_executable(${CMAKE_PROJECT_NAME}
         User/Sensor/gy901.c
         User/Sensor/abslute_angle_sensor.c
         User/Tool/eeprom.c
-        User/It/timer_it.h)
+        User/It/timer_it.h
+        User/Tool/pendulum.c
+        User/Tool/pendulum.h)
 
 # -----------------------------
 # STM32CubeMX 生成代码

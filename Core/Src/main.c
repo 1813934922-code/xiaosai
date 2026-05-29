@@ -27,6 +27,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+
 #include "status.h"
 #include "pid.h"
 #include "log.h"
@@ -115,20 +117,21 @@ int main(void)
   set_pid(&status.motor.wheel[1].wheel_pid, 0.7,0.1,0.15);
   HAL_TIM_Base_Start_IT(&htim7);
   //mode=0;
-
+  char a[10];
+  sprintf(a,"hello\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    if (target_data.l1 != 0 && target_data.l2 != 0)
-    {
-      log_uprintf(&huart1,"l1:%.2f,l2:%.2f\n",target_data.l1,target_data.l2);
-      target_data.l1 = 0;
-      target_data.l2 = 0;
 
-    }
+      log_uprintf(&huart1,"%d,%d\n",status.motor.wheel[0].cur_speed,status.motor.wheel[1].cur_speed);
+      //log_uprintf(&huart1,"hello\n");
+      //HAL_UART_Transmit(&huart1,(uint8_t *)a,sizeof(a),100);
+      HAL_Delay(100);
+
+
     //log_uprintf(&huart1,"%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",status.sensor.gw_analogue.channel[0],status.sensor.gw_analogue.channel[1],status.sensor.gw_analogue.channel[2],status.sensor.gw_analogue.channel[3],status.sensor.gw_analogue.channel[4],status.sensor.gw_analogue.channel[5],status.sensor.gw_analogue.channel[6],status.sensor.gw_analogue.channel[7]);
     //log_uprintf(&huart1,"%.2f,%.2f,%d,%d,%d,%d\n",get_gyr_value(&status.sensor.gyr,gyr_z_yaw),status.sensor.gw_analogue.diff,status.motor.wheel[0].cur_speed,status.motor.wheel[1].cur_speed,status.motor.wheel[0].tar_speed,status.motor.wheel[1].tar_speed);
     // if (status.sensor.gw_analogue.cross.cross != Straight)

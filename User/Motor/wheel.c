@@ -3,7 +3,7 @@
 #include "log.h"
 #include "math_tool.h"
 
-int16_t get_wheel_speed(WHEEL *wheel) {
+float get_wheel_speed(WHEEL *wheel) {
   int16_t encoder_ticks = 0;
   if (wheel->which == 1) {
     encoder_ticks = TIM1->CNT - 30000;
@@ -13,7 +13,7 @@ int16_t get_wheel_speed(WHEEL *wheel) {
     TIM2->CNT = 30000;
   }
   encoder_ticks = encoder_ticks * wheel->dir;
-  return (int16_t)((float)encoder_ticks * 60.0f * PID_HZ / MOTOR_REDUCTION);
+  return (float)encoder_ticks * 60.0f * PID_HZ / MOTOR_REDUCTION;
 }
 
 void set_wheel_dir(WHEEL *wheel, int16_t trust) {
@@ -55,7 +55,7 @@ void init_wheel(WHEEL *wheel, uint8_t which, int8_t dir) {
   wheel->cur_speed = 0;
   wheel->tar_speed = 0;
   wheel->dir = dir;
-  wheel->wheel_pid = init_pid(1, 1, 1, 10, 5000);
+  wheel->wheel_pid = init_pid(1, 1, 1, 5, 5000);
 
   if (wheel->which == 1) {
     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);

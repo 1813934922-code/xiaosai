@@ -30,22 +30,29 @@ void get_gyr_raw_data(I2C_HandleTypeDef *i2c, GYR *gyr) {
 
 float get_gyr_value(GYR *gyr, enum gyroscope key) {
   uint8_t cnt = (key - gyr->data_start_addr) * 2;
+  // 保持你原来的拼接逻辑
   float value = (short)(((short)gyr->data_buf[cnt + 1] << 8) | gyr->data_buf[cnt]);
 
   switch (key) {
-    case gyr_a_x:
-    case gyr_a_y:
-    case gyr_a_z:
-      return value * 16 * 9.8;
-    case gyr_w_x:
-    case gyr_w_y:
-    case gyr_w_z:
-      return value / 2000;
-    case gyr_x_roll:
-    case gyr_y_pitch:
-    case gyr_z_yaw:
-      return value * 180 / 32768;
+  case gyr_a_x:
+  case gyr_a_y:
+  case gyr_a_z:
+    // 修正：乘 16 乘 9.8 除以 32768.0f
+    return (value / 32768.0f) * 16.0f * 9.8f;
+
+  case gyr_w_x:
+  case gyr_w_y:
+  case gyr_w_z:
+    // 修正：角速度必须是 乘 2000 除以 32768.0f
+    return (value / 32768.0f) * 2000.0f;
+
+  case gyr_x_roll:
+  case gyr_y_pitch:
+  case gyr_z_yaw:
+    // 这个你原来写的是对的
+    return (value / 32768.0f) * 180.0f;
   }
+  return 0.0f;
 }
 
 // 封装的 IIC 写入寄存器函数
@@ -72,5 +79,24 @@ void set_gyr_6axis_mode(I2C_HandleTypeDef *i2c) {
   // 3. 保存配置到Flash (掉电不丢失)
   write_gyr_reg(i2c, REG_SAVE, SAVE_CMD);
   HAL_Delay(100); // 保存操作耗时较长，给够100ms
+}
+
+// 设置当前姿态为角度零点 (硬件级别绝对零点)
+void set_gyr_angle_reference(I2C_HandleTypeDef *i2c) {
+  // 1. 解锁配置寄存器
+  write_gyr_reg(i2c, REG_UNLOCK, UNLOCK_CMD);
+  HAL_Delay(50);
+
+  // 2. 写入设置角度参考指令 (X/Y轴置零，Z轴归零)
+  write_gyr_reg(i2c, REG_CALSW, CAL_ANGLE_REF);
+  HAL_Delay(100); // 必须给够时间让单片机内部矩阵重置
+
+  // 3. 恢复正常工作模式 (防止传感器卡在校准模式)
+  write_gyr_reg(i2c, REG_CALSW, CAL_NORMAL);
+  HAL_Delay(50);
+
+  // 4. 保存配置到Flash (掉电不丢失)
+  write_gyr_reg(i2c, REG_SAVE, SAVE_CMD);
+  HAL_Delay(100); // 保存操作耗时较长
 }
 

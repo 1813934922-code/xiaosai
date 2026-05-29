@@ -8,6 +8,7 @@
 #include "status.h"
 #include "task.h"
 #include "buzzer.h"
+#include "i2c.h"
 #include "timer_it.h"
 
 extern PID balance_pid;
@@ -45,6 +46,7 @@ void server_button(BUTTON *button, BUTTON_STATION station) {
           status.device.led1.on = 1;
           status.device.led2.on = 1;
           status.device.led3.on = 1;
+          set_gyr_angle_reference(&hi2c1);
           break;
       }
     } else if (station == BUTTON_UP) {
@@ -60,15 +62,6 @@ void server_button(BUTTON *button, BUTTON_STATION station) {
     }
   } else if (button->which == 2) {
     if (station == BUTTON_DOWN) {
-
-      if (gyro_test_state == GYRO_TEST_IDLE || gyro_test_state == GYRO_TEST_DONE) {
-        gyro_test_state = GYRO_TEST_START;
-        beep();
-      }
-
-
-
-
     } else if (station == BUTTON_UP) {
       status.device.buzzer1.on = 0;
     } else if (station == BUTTON_LONG) {
