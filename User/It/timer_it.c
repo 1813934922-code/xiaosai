@@ -216,7 +216,8 @@ typedef enum
 First_Statu first_statu = forward;
 
 void first_mode_handler() {
-  pendulum_ctrl.is_balancing = 0;
+  // 确保平衡控制被彻底关闭，交出底层电机控制权
+  pendulum_ctrl.state = PEND_STOP;
 
   // 终点检测：全白防抖逻辑
   static uint8_t all_white_cnt = 0;
@@ -229,7 +230,7 @@ void first_mode_handler() {
   }
 
   // 连续3次(15ms)读到全白，确认车头已驶出B点
-  if (all_white_cnt >= 3) {
+  if (all_white_cnt >= 1) {
     first_statu = first_stop;
   }
 
@@ -246,19 +247,13 @@ void first_mode_handler() {
 }
 
 void second_mode_handler() {
-  pendulum_ctrl.is_balancing = 1;
-  pendulum_ctrl.target_speed = 0.0f; // 原地站立
-
-  static uint16_t balance_time_cnt = 0;
-  balance_time_cnt++;
-  if (balance_time_cnt >= 1000) {    // 1000 * 10ms = 10秒
-    pendulum_ctrl.is_balancing = 0;
-    stop_motor();
-    run_state = FINISHED;
-    balance_time_cnt = 0;
+  // 首次进入任务时，如果处于停机状态，则触发甩鞭起摆
+  if (pendulum_ctrl.state == PEND_STOP) {
+    pendulum_ctrl.target_speed = 0.0f;     // 目标：原地站立
+    pendulum_ctrl.state = PEND_SWING_UP;   // 触发起摆状态机！
   }
-}
 
+}
 void start_task() {
   if (mode == stop) return;
   run_state = COUNTDOWN;
@@ -373,8 +368,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     //更新状态
     //satus.motor.wheel[0].trust = 400;
     //status.motor.wheel[1].trust = 400;
-    status.motor.wheel[0].tar_speed = 50;
-    status.motor.wheel[1].tar_speed = 50;
+    //status.motor.wheel[0].tar_speed = 50;
+    //status.motor.wheel[1].tar_speed = 50;
     //update_wheel_speed_control();
     if (status.state.time % 5 == 0)
     {
@@ -386,7 +381,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
       status.motor.wheel[1].cur_speed = (int16_t)get_wheel_speed(&status.motor.wheel[1]);
 
       // 3. 执行核心控制算法
-      if (pendulum_ctrl.is_balancing) {
+      if (pendulum_ctrl.state != 0) {
         // 倒立摆模式：执行三环融合，内部会直接刷新 trust 并调用 driver_wheel
         update_pendulum_control();
       } else {
@@ -405,7 +400,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
       get_gw_analogue_analogue_diff(&status.sensor.gw_analogue);
       //follow(90);
-      //task_handler();
+      task_handler();
       //gyro_turn_test();
     }
   }

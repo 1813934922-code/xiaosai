@@ -46,7 +46,8 @@ void server_button(BUTTON *button, BUTTON_STATION station) {
           status.device.led1.on = 1;
           status.device.led2.on = 1;
           status.device.led3.on = 1;
-          set_gyr_angle_reference(&hi2c1);
+
+          //set_gyr_angle_reference(&hi2c1);
           break;
       }
     } else if (station == BUTTON_UP) {

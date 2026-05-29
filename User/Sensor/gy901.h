@@ -58,4 +58,11 @@ void init_gyr(GYR *gyr);
 
 void set_gyr_angle_reference(I2C_HandleTypeDef *i2c);
 
+// 在 #define REG_CALSW 0x01 下面添加：
+#define REG_RRATE     0x03   // 输出速率寄存器
+#define RATE_200HZ    0x0B   // 200Hz 回传速率配置值
+
+// 在文件底部的函数声明区添加：
+void set_gyr_rate_200hz(I2C_HandleTypeDef *i2c);
+
 #endif /* !__GYROSCOPE_H__ */
