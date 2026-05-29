@@ -111,7 +111,7 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   init_status(&status,1);
-  set_pid(&status.sensor.gw_analogue.gw_analogue_pid, 0.25,0,0.08);
+  set_pid(&status.sensor.gw_analogue.gw_analogue_pid, 0.05,0,1);
   //set_pid(&status.sensor.gw_analogue.gw_analogue_pid, 0.4,0,0.25);
   set_pid(&status.motor.wheel[0].wheel_pid, 0.7,0.1,0.15);
   set_pid(&status.motor.wheel[1].wheel_pid, 0.7,0.1,0.15);
@@ -119,6 +119,7 @@ int main(void)
   //mode=0;
   char a[10];
   sprintf(a,"hello\n");
+  set_gyr_angle_reference(&hi2c1);
   /* USER CODE END 2 */
 
   /* Infinite loop */

@@ -23,7 +23,7 @@ void init_gyr(GYR *gyr) {
 }
 
 void get_gyr_raw_data(I2C_HandleTypeDef *i2c, GYR *gyr) {
-  HAL_I2C_Mem_Read(i2c, (uint16_t)(GYR_ADDR << 1), gyr->data_start_addr, I2C_MEMADD_SIZE_8BIT, gyr->data_buf, 24, 10);
+  HAL_I2C_Mem_Read(i2c, (uint16_t)(GYR_ADDR << 1), gyr->data_start_addr, I2C_MEMADD_SIZE_8BIT, gyr->data_buf, 24, 2);
 
   return;
 }
@@ -52,7 +52,7 @@ float get_gyr_value(GYR *gyr, enum gyroscope key) {
     // 这个你原来写的是对的
     return (value / 32768.0f) * 180.0f;
   }
-  return 0.0f;
+  //return 0.0f;
 }
 
 // 封装的 IIC 写入寄存器函数

@@ -9,6 +9,7 @@
 #include "gw_anagloge.h"
 #include "buzzer.h"
 #include "i2c.h"
+#include "pendulum.h"
 STATUS status;
 
 PID balance_pid;
@@ -63,6 +64,8 @@ void init_status(STATUS *status, uint8_t T) {
 
   set_gyr_6axis_mode(&hi2c1);
 
+  init_pendulum();
+
   return;
 }
 
@@ -77,6 +80,6 @@ void driver_status(STATUS *status) {
     //driver_wheel(&status->motor.wheel[1]);
     //driver_gw_analogue(&status->sensor.gw_analogue);
     driver_BUZZER(&status->device.buzzer1);
-    get_gyr_raw_data(&hi2c1,&status->sensor.gyr);
+    //get_gyr_raw_data(&hi2c1,&status->sensor.gyr);
     //driver_gyr(&status->sensor.gyr);
 }
