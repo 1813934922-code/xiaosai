@@ -247,651 +247,651 @@ void angle_handler(float tar_angle_diff, uint8_t turn_mode) {
   }
 }
 
-void first_mode_handler() {
-  Road road = status.sensor.gw_analogue.cross.cross;
-  uint8_t digital = status.sensor.gw_analogue.digital_8bit;
-  //uint8_t center_black = (digital & 0x18) != 0;
+// void first_mode_handler() {
+//   Road road = status.sensor.gw_analogue.cross.cross;
+//   uint8_t digital = status.sensor.gw_analogue.digital_8bit;
+//   //uint8_t center_black = (digital & 0x18) != 0;
+//
+//   switch (first_state) {
+//     case FIRST_INIT_TURN:
+//       //turn_dir = 0;
+//       gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
+//       gyro_turn_pid.integral = 0;
+//       gyro_turn_pid.is_first = 1;
+//       gyro_turn_done = 0;
+//       black_line_cnt = 0;
+//       gyro_turn_phase = 0;
+//       first_flag = 1;
+//       black_line_shield_cnt = BLACK_LINE_INIT_SHIELD_TIMES;
+//       first_state = FIRST_TURNING;
+//       log_uprintf(&huart1, "[FIRST] INIT_TURN dir=%d (L=%d R=%d)\n",
+//                   turn_dir,
+//                   (status.sensor.gw_analogue.digital_8bit & 0x80) ? 1 : 0,
+//                   (status.sensor.gw_analogue.digital_8bit & 0x01) ? 1 : 0);
+//       //cross_cnt++;
+//       break;
+//
+//     case FIRST_FOLLOW_LINE:
+//       follow(BASE_SPEED);
+//       if (road == LeftRoad ) {
+//         cross_cnt++;
+//         turn_dir = 0;
+//         if (cross_cnt >= 4) {
+//           stop_motor();
+//           reverse_park_cnt = REVERSE_PARK_TIMES;
+//           first_state = FIRST_ARRIVED;
+//           start_blink();
+//           log_uprintf(&huart1, "[FIRST] ARRIVED cross=%d\n", cross_cnt);
+//         } else {
+//           stop_motor();
+//           cross_delay_cnt = CROSS_STOP_MS / 10;
+//           beep();
+//           first_state = FIRST_STOP;
+//           log_uprintf(&huart1, "[FIRST] LEFT cross=%d stop=%dms\n", cross_cnt, CROSS_STOP_MS);
+//         }
+//       } else if (road == RightRoad ) {
+//         cross_cnt++;
+//         turn_dir = 1;
+//         if (cross_cnt >= 4) {
+//           stop_motor();
+//           reverse_park_cnt = REVERSE_PARK_TIMES;
+//           first_state = FIRST_ARRIVED;
+//           start_blink();
+//           log_uprintf(&huart1, "[FIRST] ARRIVED cross=%d\n", cross_cnt);
+//         } else {
+//           stop_motor();
+//           cross_delay_cnt = CROSS_STOP_MS / 10;
+//           beep();
+//           first_state = FIRST_STOP;
+//           log_uprintf(&huart1, "[FIRST] RIGHT cross=%d stop=%dms\n", cross_cnt, CROSS_STOP_MS);
+//         }
+//       }
+//       break;
+//
+//     case FIRST_STOP:
+//       if (cross_delay_cnt > 0) {
+//         cross_delay_cnt--;
+//       } else {
+//         gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
+//         gyro_turn_pid.integral = 0;
+//         gyro_turn_pid.is_first = 1;
+//         gyro_turn_done = 0;
+//         black_line_cnt = 0;
+//         gyro_turn_phase = 0;
+//         black_line_shield_cnt = BLACK_LINE_SHIELD_TIMES;
+//         beep_off();
+//         first_state = FIRST_TURNING;
+//         log_uprintf(&huart1, "[FIRST] TURNING dir=%d angle=%.0f\n", turn_dir, turn_dir == 0 ? 45.0f : -45.0f);
+//       }
+//       break;
+//
+//     case FIRST_TURNING:
+//       if (black_line_shield_cnt > 0) {
+//         black_line_shield_cnt--;
+//         black_line_cnt = 0;
+//       } else if (status.sensor.gw_analogue.digital_8bit & (turn_dir == 0 ? BLACK_LINE_MASK_LTURN : BLACK_LINE_MASK_RTURN)) {
+//         black_line_cnt++;
+//         if (black_line_cnt >= BLACK_LINE_DETECT_TIMES) {
+//           black_line_cnt = 0;
+//           gyro_turn_pid.integral = 0;
+//           stop_motor();
+//           first_state = FIRST_FOLLOW_LINE;
+//           status.sensor.gw_analogue.cross.cross = Straight;
+//           status.sensor.gw_analogue.cross.cross_delay = GYRO_SHIELD_TIMES;
+//           first_flag = 0;
+//           log_uprintf(&huart1, "[FIRST] Black line detected, switch to FOLLOW_LINE\n");
+//           break;
+//         }
+//       } else {
+//         black_line_cnt = 0;
+//       }
+//       if (gyro_turn_phase == 0) {
+//         if (first_flag)
+//         {
+//           angle_handler(turn_dir == 0 ? 80.0f : -80.0f, GYRO_TURN_ARC);
+//         }else
+//         {
+//           angle_handler(turn_dir == 0 ? 90.0f : -90.0f, GYRO_TURN_ARC);
+//         }
+//
+//         if (gyro_turn_done) {
+//           gyro_turn_done = 0;
+//           gyro_turn_phase = 1;
+//           log_uprintf(&huart1, "[FIRST] Angle reached, constant speed searching line\n");
+//         }
+//       } else {
+//         if (turn_dir == 0) {
+//           status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
+//           status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
+//         } else {
+//           status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
+//           status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
+//         }
+//       }
+//       break;
+//
+//     case FIRST_PAUSE:
+//       first_state = FIRST_FOLLOW_LINE;
+//       status.sensor.gw_analogue.cross.cross = Straight;
+//       status.sensor.gw_analogue.cross.cross_delay = GYRO_SHIELD_TIMES;
+//       break;
+//
+//     case FIRST_ARRIVED:
+//       if (reverse_park_cnt > 0) {
+//         reverse_park_cnt--;
+//         status.motor.wheel[0].tar_speed = -BASE_SPEED / 2;
+//         status.motor.wheel[1].tar_speed = -BASE_SPEED / 2;
+//       } else {
+//         stop_motor();
+//         run_state = FINISHED;
+//       }
+//       break;
+//   }
+// }
 
-  switch (first_state) {
-    case FIRST_INIT_TURN:
-      //turn_dir = 0;
-      gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
-      gyro_turn_pid.integral = 0;
-      gyro_turn_pid.is_first = 1;
-      gyro_turn_done = 0;
-      black_line_cnt = 0;
-      gyro_turn_phase = 0;
-      first_flag = 1;
-      black_line_shield_cnt = BLACK_LINE_INIT_SHIELD_TIMES;
-      first_state = FIRST_TURNING;
-      log_uprintf(&huart1, "[FIRST] INIT_TURN dir=%d (L=%d R=%d)\n",
-                  turn_dir,
-                  (status.sensor.gw_analogue.digital_8bit & 0x80) ? 1 : 0,
-                  (status.sensor.gw_analogue.digital_8bit & 0x01) ? 1 : 0);
-      //cross_cnt++;
-      break;
-
-    case FIRST_FOLLOW_LINE:
-      follow(BASE_SPEED);
-      if (road == LeftRoad ) {
-        cross_cnt++;
-        turn_dir = 0;
-        if (cross_cnt >= 4) {
-          stop_motor();
-          reverse_park_cnt = REVERSE_PARK_TIMES;
-          first_state = FIRST_ARRIVED;
-          start_blink();
-          log_uprintf(&huart1, "[FIRST] ARRIVED cross=%d\n", cross_cnt);
-        } else {
-          stop_motor();
-          cross_delay_cnt = CROSS_STOP_MS / 10;
-          beep();
-          first_state = FIRST_STOP;
-          log_uprintf(&huart1, "[FIRST] LEFT cross=%d stop=%dms\n", cross_cnt, CROSS_STOP_MS);
-        }
-      } else if (road == RightRoad ) {
-        cross_cnt++;
-        turn_dir = 1;
-        if (cross_cnt >= 4) {
-          stop_motor();
-          reverse_park_cnt = REVERSE_PARK_TIMES;
-          first_state = FIRST_ARRIVED;
-          start_blink();
-          log_uprintf(&huart1, "[FIRST] ARRIVED cross=%d\n", cross_cnt);
-        } else {
-          stop_motor();
-          cross_delay_cnt = CROSS_STOP_MS / 10;
-          beep();
-          first_state = FIRST_STOP;
-          log_uprintf(&huart1, "[FIRST] RIGHT cross=%d stop=%dms\n", cross_cnt, CROSS_STOP_MS);
-        }
-      }
-      break;
-
-    case FIRST_STOP:
-      if (cross_delay_cnt > 0) {
-        cross_delay_cnt--;
-      } else {
-        gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
-        gyro_turn_pid.integral = 0;
-        gyro_turn_pid.is_first = 1;
-        gyro_turn_done = 0;
-        black_line_cnt = 0;
-        gyro_turn_phase = 0;
-        black_line_shield_cnt = BLACK_LINE_SHIELD_TIMES;
-        beep_off();
-        first_state = FIRST_TURNING;
-        log_uprintf(&huart1, "[FIRST] TURNING dir=%d angle=%.0f\n", turn_dir, turn_dir == 0 ? 45.0f : -45.0f);
-      }
-      break;
-
-    case FIRST_TURNING:
-      if (black_line_shield_cnt > 0) {
-        black_line_shield_cnt--;
-        black_line_cnt = 0;
-      } else if (status.sensor.gw_analogue.digital_8bit & (turn_dir == 0 ? BLACK_LINE_MASK_LTURN : BLACK_LINE_MASK_RTURN)) {
-        black_line_cnt++;
-        if (black_line_cnt >= BLACK_LINE_DETECT_TIMES) {
-          black_line_cnt = 0;
-          gyro_turn_pid.integral = 0;
-          stop_motor();
-          first_state = FIRST_FOLLOW_LINE;
-          status.sensor.gw_analogue.cross.cross = Straight;
-          status.sensor.gw_analogue.cross.cross_delay = GYRO_SHIELD_TIMES;
-          first_flag = 0;
-          log_uprintf(&huart1, "[FIRST] Black line detected, switch to FOLLOW_LINE\n");
-          break;
-        }
-      } else {
-        black_line_cnt = 0;
-      }
-      if (gyro_turn_phase == 0) {
-        if (first_flag)
-        {
-          angle_handler(turn_dir == 0 ? 80.0f : -80.0f, GYRO_TURN_ARC);
-        }else
-        {
-          angle_handler(turn_dir == 0 ? 90.0f : -90.0f, GYRO_TURN_ARC);
-        }
-
-        if (gyro_turn_done) {
-          gyro_turn_done = 0;
-          gyro_turn_phase = 1;
-          log_uprintf(&huart1, "[FIRST] Angle reached, constant speed searching line\n");
-        }
-      } else {
-        if (turn_dir == 0) {
-          status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
-          status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
-        } else {
-          status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
-          status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
-        }
-      }
-      break;
-
-    case FIRST_PAUSE:
-      first_state = FIRST_FOLLOW_LINE;
-      status.sensor.gw_analogue.cross.cross = Straight;
-      status.sensor.gw_analogue.cross.cross_delay = GYRO_SHIELD_TIMES;
-      break;
-
-    case FIRST_ARRIVED:
-      if (reverse_park_cnt > 0) {
-        reverse_park_cnt--;
-        status.motor.wheel[0].tar_speed = -BASE_SPEED / 2;
-        status.motor.wheel[1].tar_speed = -BASE_SPEED / 2;
-      } else {
-        stop_motor();
-        run_state = FINISHED;
-      }
-      break;
-  }
-}
-
-void second_mode_handler() {
-  Road road = status.sensor.gw_analogue.cross.cross;
-
-  switch (second_state) {
-    case SECOND_INIT_TURN:
-
-      gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
-      gyro_turn_pid.integral = 0;
-      gyro_turn_pid.is_first = 1;
-      gyro_turn_done = 0;
-      black_line_cnt = 0;
-      gyro_turn_phase = 0;
-      first_flag = 1;
-      black_line_shield_cnt = BLACK_LINE_INIT_SHIELD_TIMES;
-      second_state = SECOND_TURNING;
-      //log_uprintf(&huart1, "[SECOND] INIT_TURN dir=%d (L=%d R=%d)\n",
-                  //turn_dir,
-                  //(status.sensor.gw_analogue.digital_8bit & 0x80) ? 1 : 0,
-                  //(status.sensor.gw_analogue.digital_8bit & 0x01) ? 1 : 0);
-      break;
-
-    case SECOND_FOLLOW_LINE:
-      follow(BASE_SPEED);
-      if (road == TLRoad || road == TRRoad || road == CrossRoad || road == TBRoad) {
-        beep();
-        second_state = SECOND_CROSSING_IGNORE;
-        cross_delay_cnt = CROSS_DELAY_MS / 10;
-        log_uprintf(&huart1, "[SECOND] T/Cross road, ignore\n");
-      } else if (road == LeftRoad) {
-        second_turn_cnt++;
-        turn_dir = 0;
-        if (second_turn_cnt >= SECOND_GO_CORNERS) {
-          gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
-          gyro_turn_pid.integral = 0;
-          gyro_turn_pid.is_first = 1;
-          gyro_turn_done = 0;
-          black_line_cnt = 0;
-          gyro_turn_phase = 0;
-          black_line_shield_cnt = BLACK_LINE_SHIELD_TIMES;
-          stop_motor();
-          second_state = SECOND_UTURN;
-          beep();
-          //log_uprintf(&huart1, "[SECOND] LEFT cross=%d -> UTURN\n", second_turn_cnt);
-        } else {
-          stop_motor();
-          cross_delay_cnt = CROSS_STOP_MS / 10;
-          beep();
-          second_state = SECOND_STOP;
-          //log_uprintf(&huart1, "[SECOND] LEFT cross=%d stop=%dms\n", second_turn_cnt, CROSS_STOP_MS);
-        }
-      } else if (road == RightRoad) {
-        second_turn_cnt++;
-        turn_dir = 1;
-        if (second_turn_cnt >= SECOND_GO_CORNERS) {
-          gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
-          gyro_turn_pid.integral = 0;
-          gyro_turn_pid.is_first = 1;
-          gyro_turn_done = 0;
-          black_line_cnt = 0;
-          gyro_turn_phase = 0;
-          black_line_shield_cnt = BLACK_LINE_SHIELD_TIMES;
-          stop_motor();
-          second_state = SECOND_UTURN;
-          beep();
-          ///log_uprintf(&huart1, "[SECOND] RIGHT cross=%d -> UTURN\n", second_turn_cnt);
-        } else {
-          stop_motor();
-          cross_delay_cnt = CROSS_STOP_MS / 10;
-          beep();
-          second_state = SECOND_STOP;
-          //log_uprintf(&huart1, "[SECOND] RIGHT cross=%d stop=%dms\n", second_turn_cnt, CROSS_STOP_MS);
-        }
-      }
-      break;
-
-    case SECOND_CROSSING_IGNORE:
-      follow(BASE_SPEED);
-
-
-      beep_off();
-      second_state = SECOND_FOLLOW_LINE;
-      status.sensor.gw_analogue.cross.cross = Straight;
-      //status.sensor.gw_analogue.cross.cross_delay = CROSS_SHIELD_TIMES;
-
-
-      break;
-
-    case SECOND_STOP:
-      if (cross_delay_cnt > 0) {
-        cross_delay_cnt--;
-      } else {
-        gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
-        gyro_turn_pid.integral = 0;
-        gyro_turn_pid.is_first = 1;
-        gyro_turn_done = 0;
-        black_line_cnt = 0;
-        gyro_turn_phase = 0;
-        black_line_shield_cnt = BLACK_LINE_SHIELD_TIMES;
-        beep_off();
-        second_state = SECOND_TURNING;
-        log_uprintf(&huart1, "[SECOND] TURNING dir=%d angle=%.0f\n", turn_dir, turn_dir == 0 ? 90.0f : -90.0f);
-      }
-      break;
-
-    case SECOND_TURNING:
-      if (black_line_shield_cnt > 0) {
-        black_line_shield_cnt--;
-        black_line_cnt = 0;
-      } else if (status.sensor.gw_analogue.digital_8bit & (turn_dir == 0 ? BLACK_LINE_MASK_LTURN : BLACK_LINE_MASK_RTURN)) {
-        black_line_cnt++;
-        if (black_line_cnt >= BLACK_LINE_DETECT_TIMES) {
-          black_line_cnt = 0;
-          gyro_turn_pid.integral = 0;
-          stop_motor();
-          second_state = SECOND_FOLLOW_LINE;
-          status.sensor.gw_analogue.cross.cross = Straight;
-          first_flag = 0;
-          status.sensor.gw_analogue.cross.cross_delay = GYRO_SHIELD_TIMES;
-          log_uprintf(&huart1, "[SECOND] Black line detected, switch to FOLLOW_LINE\n");
-          break;
-        }
-      } else {
-        black_line_cnt = 0;
-      }
-      if (gyro_turn_phase == 0) {
-        if (first_flag)
-        {
-          angle_handler(turn_dir == 0 ? 80.0f : -80.0f, GYRO_TURN_ARC);
-        }else
-        {
-          angle_handler(turn_dir == 0 ? 90.0f : -90.0f, GYRO_TURN_ARC);
-        }
-
-        if (gyro_turn_done) {
-          gyro_turn_done = 0;
-          gyro_turn_phase = 1;
-          log_uprintf(&huart1, "[SECOND] Angle reached, constant speed searching line\n");
-        }
-      } else {
-        if (turn_dir == 0) {
-          status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
-          status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
-        } else {
-          status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
-          status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
-        }
-      }
-      break;
-
-    case SECOND_UTURN: {
-      // 1. 获取当前陀螺仪角度，并计算相对于转向起点的偏差角度
-      float cur_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
-      float diff = cur_angle - gyro_start_angle;
-
-      // 角度规范化到 -180 到 180 之间
-      while (diff > 180.0f) diff -= 360.0f;
-      while (diff < -180.0f) diff += 360.0f;
-
-      // 取绝对值，得到实际已经转过的度数
-      if (diff < 0) diff = -diff;
-
-      // 2. 捕捉转过90度的点，满足条件后开启黑线检测
-      if (diff >= 90.0f) {
-        // 使用原有的左转掉头掩码检测黑线
-        if (status.sensor.gw_analogue.digital_8bit & BLACK_LINE_MASK_LTURN) {
-          black_line_cnt++;
-          if (black_line_cnt >= BLACK_LINE_DETECT_TIMES) {
-            // 确认检测到黑线，清除状态并切换到直线模式
-            black_line_cnt = 0;
-            gyro_turn_pid.integral = 0;
-            stop_motor();
-
-            second_state = SECOND_RETURN_FOLLOW;
-            status.sensor.gw_analogue.cross.cross = Straight;
-            status.sensor.gw_analogue.cross.cross_delay = GYRO_SHIELD_TIMES;
-
-            log_uprintf(&huart1, "[SECOND] UTURN black line detected after 90deg, switch to RETURN_FOLLOW\n");
-            break; // 成功切线，跳出当前 case
-          }
-        } else {
-          black_line_cnt = 0;
-        }
-      }
-
-      // 3. 始终使用陀螺仪控制目标转 180 度 (原地打转)
-      // angle_handler 会在内部自动处理 PID 计算和死区限制
-      angle_handler(180.0f, GYRO_TURN_PIVOT);
-
-      // 4. 清除到位标志位 (防止 PID 锁死在 180 度时不断触发 done)
-      if (gyro_turn_done) {
-        gyro_turn_done = 0;
-      }
-
-      break;
-    }
-
-    case SECOND_RETURN_FOLLOW:
-      follow(BASE_SPEED);
-      if (road == TLRoad || road == TRRoad || road == CrossRoad || road == TBRoad) {
-        beep();
-        second_state = SECOND_RETURN_CROSSING_IGNORE;
-        cross_delay_cnt = CROSS_DELAY_MS / 10;
-        log_uprintf(&huart1, "[SECOND] RETURN T/Cross road, ignore\n");
-      } else if (road == LeftRoad) {
-        second_return_cnt++;
-        turn_dir = 0;
-        if (second_return_cnt >= SECOND_RETURN_CORNERS) {
-          stop_motor();
-          reverse_park_cnt = REVERSE_PARK_TIMES;
-          second_state = SECOND_ARRIVED;
-          start_blink();
-          log_uprintf(&huart1, "[SECOND] RETURN LEFT cross=%d -> ARRIVED\n", second_return_cnt);
-        } else {
-          stop_motor();
-          cross_delay_cnt = CROSS_STOP_MS / 10;
-          beep();
-          second_state = SECOND_RETURN_STOP;
-          log_uprintf(&huart1, "[SECOND] RETURN LEFT cross=%d stop=%dms\n", second_return_cnt, CROSS_STOP_MS);
-        }
-      } else if (road == RightRoad) {
-        second_return_cnt++;
-        turn_dir = 1;
-        if (second_return_cnt >= SECOND_RETURN_CORNERS) {
-          stop_motor();
-          reverse_park_cnt = REVERSE_PARK_TIMES;
-          second_state = SECOND_ARRIVED;
-          start_blink();
-          log_uprintf(&huart1, "[SECOND] RETURN RIGHT cross=%d -> ARRIVED\n", second_return_cnt);
-        } else {
-          stop_motor();
-          cross_delay_cnt = CROSS_STOP_MS / 10;
-          beep();
-          second_state = SECOND_RETURN_STOP;
-          log_uprintf(&huart1, "[SECOND] RETURN RIGHT cross=%d stop=%dms\n", second_return_cnt, CROSS_STOP_MS);
-        }
-      }
-      break;
-
-    case SECOND_RETURN_CROSSING_IGNORE:
-      follow(BASE_SPEED);
-
-
-      beep_off();
-      second_state = SECOND_RETURN_FOLLOW;
-      status.sensor.gw_analogue.cross.cross = Straight;
-        //status.sensor.gw_analogue.cross.cross_delay = CROSS_SHIELD_TIMES;
-
-
-      break;
-
-    case SECOND_RETURN_STOP:
-      if (cross_delay_cnt > 0) {
-        cross_delay_cnt--;
-      } else {
-        gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
-        gyro_turn_pid.integral = 0;
-        gyro_turn_pid.is_first = 1;
-        gyro_turn_done = 0;
-        black_line_cnt = 0;
-        gyro_turn_phase = 0;
-        black_line_shield_cnt = BLACK_LINE_SHIELD_TIMES;
-        beep_off();
-        second_state = SECOND_RETURN_TURNING;
-        log_uprintf(&huart1, "[SECOND] RETURN_TURNING dir=%d angle=%.0f\n", turn_dir, turn_dir == 0 ? 70.0f : -70.0f);
-      }
-      break;
-
-    case SECOND_RETURN_TURNING:
-      if (black_line_shield_cnt > 0) {
-        black_line_shield_cnt--;
-        black_line_cnt = 0;
-      } else if (status.sensor.gw_analogue.digital_8bit & (turn_dir == 0 ? BLACK_LINE_MASK_LTURN : BLACK_LINE_MASK_RTURN)) {
-        black_line_cnt++;
-        if (black_line_cnt >= BLACK_LINE_DETECT_TIMES) {
-          black_line_cnt = 0;
-          gyro_turn_pid.integral = 0;
-          stop_motor();
-          second_state = SECOND_RETURN_FOLLOW;
-          status.sensor.gw_analogue.cross.cross = Straight;
-          status.sensor.gw_analogue.cross.cross_delay = GYRO_SHIELD_TIMES;
-          log_uprintf(&huart1, "[SECOND] Black line detected during RETURN_TURN, switch to RETURN_FOLLOW\n");
-          break;
-        }
-      } else {
-        black_line_cnt = 0;
-      }
-      if (gyro_turn_phase == 0) {
-        angle_handler(turn_dir == 0 ? 90.0f : -90.0f, GYRO_TURN_ARC);
-        if (gyro_turn_done) {
-          gyro_turn_done = 0;
-          gyro_turn_phase = 1;
-          log_uprintf(&huart1, "[SECOND] RETURN_TURN angle reached, constant speed searching line\n");
-        }
-      } else {
-        if (turn_dir == 0) {
-          status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
-          status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
-        } else {
-          status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
-          status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
-        }
-      }
-      break;
-
-    case SECOND_RETURN_GYRO_TURN:
-      if (black_line_shield_cnt > 0) {
-        black_line_shield_cnt--;
-        black_line_cnt = 0;
-      } else if (status.sensor.gw_analogue.digital_8bit & (turn_dir == 0 ? BLACK_LINE_MASK_LTURN : BLACK_LINE_MASK_RTURN)) {
-        black_line_cnt++;
-        if (black_line_cnt >= BLACK_LINE_DETECT_TIMES) {
-          black_line_cnt = 0;
-          gyro_turn_pid.integral = 0;
-          stop_motor();
-          reverse_park_cnt = REVERSE_PARK_TIMES;
-          second_state = SECOND_ARRIVED;
-          start_blink();
-          log_uprintf(&huart1, "[SECOND] RETURN GYRO_TURN black line detected, ARRIVED\n");
-          break;
-        }
-      } else {
-        black_line_cnt = 0;
-      }
-      if (gyro_turn_phase == 0) {
-        angle_handler(turn_dir == 0 ? 90.0f : -90.0f, GYRO_TURN_ARC);
-        if (gyro_turn_done) {
-          gyro_turn_done = 0;
-          gyro_turn_phase = 1;
-          log_uprintf(&huart1, "[SECOND] RETURN GYRO_TURN angle reached, constant speed searching line\n");
-        }
-      } else {
-        if (turn_dir == 0) {
-          status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
-          status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
-        } else {
-          status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
-          status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
-        }
-      }
-      break;
-
-    case SECOND_ARRIVED:
-      if (reverse_park_cnt > 0) {
-        reverse_park_cnt--;
-        status.motor.wheel[0].tar_speed = -BASE_SPEED / 2;
-        status.motor.wheel[1].tar_speed = -BASE_SPEED / 2;
-      } else {
-        stop_motor();
-        run_state = FINISHED;
-      }
-      break;
-  }
-}
-
-uint8_t first_dir;
-void third_mode_handler() {
-  Road road = status.sensor.gw_analogue.cross.cross;
-
-  switch (third_state) {
-    case THIRD_INIT_TURN:
-      gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
-      gyro_turn_pid.integral = 0;
-      gyro_turn_pid.is_first = 1;
-      gyro_turn_done = 0;
-      black_line_cnt = 0;
-      gyro_turn_phase = 0;
-      first_flag = 1;
-      first_dir = turn_dir;
-      black_line_shield_cnt = BLACK_LINE_INIT_SHIELD_TIMES;
-      third_state = THIRD_TURNING;
-      // log_uprintf(&huart1, "[THIRD] INIT_TURN dir=%d (L=%d R=%d)\n",
-      //             turn_dir,
-      //             (status.sensor.gw_analogue.digital_8bit & 0x80) ? 1 : 0,
-      //             (status.sensor.gw_analogue.digital_8bit & 0x01) ? 1 : 0);
-      break;
-
-    case THIRD_FOLLOW_LINE:
-
-      follow(third_params.base_speed);
-
-      if (road == TLRoad || road == TRRoad || road == CrossRoad || road == TBRoad) {
-        beep();
-        third_state = THIRD_CROSSING_IGNORE;
-        cross_delay_cnt = third_params.cross_delay_ms / 10;
-        // log_uprintf(&huart1, "[THIRD] T/Cross road, ignore\n");
-      } else if (road == LeftRoad) {
-        third_cross_cnt++;
-        turn_dir = 0;
-        if (third_cross_cnt >= 4) {
-          stop_motor();
-          reverse_park_cnt = REVERSE_PARK_TIMES;
-          third_state = THIRD_ARRIVED;
-          start_blink();
-          // log_uprintf(&huart1, "[THIRD] ARRIVED cross=%d\n", third_cross_cnt);
-        } else {
-          stop_motor();
-          cross_delay_cnt = third_params.cross_stop_ms / 10;
-          beep();
-          third_state = THIRD_STOP;
-          //log_uprintf(&huart1, "[THIRD] LEFT cross=%d stop=%dms\n", third_cross_cnt, third_params.cross_stop_ms);
-        }
-      } else if (road == RightRoad) {
-        third_cross_cnt++;
-        turn_dir = 1;
-        if (third_cross_cnt >= 4) {
-          stop_motor();
-          reverse_park_cnt = REVERSE_PARK_TIMES;
-          third_state = THIRD_ARRIVED;
-          start_blink();
-          //log_uprintf(&huart1, "[THIRD] ARRIVED cross=%d\n", third_cross_cnt);
-        } else {
-          stop_motor();
-          cross_delay_cnt = third_params.cross_stop_ms / 10;
-          beep();
-          third_state = THIRD_STOP;
-          //log_uprintf(&huart1, "[THIRD] RIGHT cross=%d stop=%dms\n", third_cross_cnt, third_params.cross_stop_ms);
-        }
-      }
-      break;
-
-    case THIRD_CROSSING_IGNORE:
-      follow(third_params.base_speed);
-      beep_off();
-      third_state = THIRD_FOLLOW_LINE;
-      status.sensor.gw_analogue.cross.cross = Straight;
-          //status.sensor.gw_analogue.cross.cross_delay = third_params.cross_shield_times;
-
-
-      break;
-
-    case THIRD_STOP:
-      if (cross_delay_cnt > 0) {
-        cross_delay_cnt--;
-      } else {
-        gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
-        gyro_turn_pid.integral = 0;
-        gyro_turn_pid.is_first = 1;
-        gyro_turn_done = 0;
-        black_line_cnt = 0;
-        gyro_turn_phase = 0;
-        black_line_shield_cnt = BLACK_LINE_SHIELD_TIMES;
-        beep_off();
-        third_state = THIRD_TURNING;
-        log_uprintf(&huart1, "[THIRD] TURNING dir=%d angle=%.0f\n", turn_dir, turn_dir == 0 ? 70.0f : -70.0f);
-      }
-      break;
-
-    case THIRD_TURNING:
-      if (black_line_shield_cnt > 0) {
-        black_line_shield_cnt--;
-        black_line_cnt = 0;
-      } else if (status.sensor.gw_analogue.digital_8bit & (turn_dir == 0 ? BLACK_LINE_MASK_LTURN : BLACK_LINE_MASK_RTURN)) {
-        black_line_cnt++;
-        if (black_line_cnt >= BLACK_LINE_DETECT_TIMES) {
-          black_line_cnt = 0;
-          gyro_turn_pid.integral = 0;
-          stop_motor();
-          third_state = THIRD_FOLLOW_LINE;
-          status.sensor.gw_analogue.cross.cross = Straight;
-          status.sensor.gw_analogue.cross.cross_delay = GYRO_SHIELD_TIMES;
-          log_uprintf(&huart1, "[THIRD] Black line detected, switch to FOLLOW_LINE\n");
-          break;
-        }
-      } else {
-        black_line_cnt = 0;
-      }
-      if (gyro_turn_phase == 0) {
-        if (first_flag)
-        {
-          angle_handler(turn_dir == 0 ? 80.0f : -80.0f, GYRO_TURN_ARC);
-        }else
-        {
-          angle_handler(turn_dir == 0 ? 90.0f : -90.0f, GYRO_TURN_ARC);
-        }
-
-        if (gyro_turn_done) {
-          gyro_turn_done = 0;
-          gyro_turn_phase = 1;
-          log_uprintf(&huart1, "[THIRD] Angle reached, constant speed searching line\n");
-        }
-      } else {
-        if (turn_dir == 0) {
-          status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
-          status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
-        } else {
-          status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
-          status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
-        }
-      }
-      break;
-
-    case THIRD_ARRIVED:
-      if (reverse_park_cnt > 0) {
-        reverse_park_cnt--;
-        status.motor.wheel[0].tar_speed = -third_params.base_speed / 2;
-        status.motor.wheel[1].tar_speed = -third_params.base_speed / 2;
-      } else {
-        stop_motor();
-        run_state = FINISHED;
-      }
-      break;
-  }
-}
+// void second_mode_handler() {
+//   Road road = status.sensor.gw_analogue.cross.cross;
+//
+//   switch (second_state) {
+//     case SECOND_INIT_TURN:
+//
+//       gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
+//       gyro_turn_pid.integral = 0;
+//       gyro_turn_pid.is_first = 1;
+//       gyro_turn_done = 0;
+//       black_line_cnt = 0;
+//       gyro_turn_phase = 0;
+//       first_flag = 1;
+//       black_line_shield_cnt = BLACK_LINE_INIT_SHIELD_TIMES;
+//       second_state = SECOND_TURNING;
+//       //log_uprintf(&huart1, "[SECOND] INIT_TURN dir=%d (L=%d R=%d)\n",
+//                   //turn_dir,
+//                   //(status.sensor.gw_analogue.digital_8bit & 0x80) ? 1 : 0,
+//                   //(status.sensor.gw_analogue.digital_8bit & 0x01) ? 1 : 0);
+//       break;
+//
+//     case SECOND_FOLLOW_LINE:
+//       follow(BASE_SPEED);
+//       if (road == TLRoad || road == TRRoad || road == CrossRoad || road == TBRoad) {
+//         beep();
+//         second_state = SECOND_CROSSING_IGNORE;
+//         cross_delay_cnt = CROSS_DELAY_MS / 10;
+//         log_uprintf(&huart1, "[SECOND] T/Cross road, ignore\n");
+//       } else if (road == LeftRoad) {
+//         second_turn_cnt++;
+//         turn_dir = 0;
+//         if (second_turn_cnt >= SECOND_GO_CORNERS) {
+//           gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
+//           gyro_turn_pid.integral = 0;
+//           gyro_turn_pid.is_first = 1;
+//           gyro_turn_done = 0;
+//           black_line_cnt = 0;
+//           gyro_turn_phase = 0;
+//           black_line_shield_cnt = BLACK_LINE_SHIELD_TIMES;
+//           stop_motor();
+//           second_state = SECOND_UTURN;
+//           beep();
+//           //log_uprintf(&huart1, "[SECOND] LEFT cross=%d -> UTURN\n", second_turn_cnt);
+//         } else {
+//           stop_motor();
+//           cross_delay_cnt = CROSS_STOP_MS / 10;
+//           beep();
+//           second_state = SECOND_STOP;
+//           //log_uprintf(&huart1, "[SECOND] LEFT cross=%d stop=%dms\n", second_turn_cnt, CROSS_STOP_MS);
+//         }
+//       } else if (road == RightRoad) {
+//         second_turn_cnt++;
+//         turn_dir = 1;
+//         if (second_turn_cnt >= SECOND_GO_CORNERS) {
+//           gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
+//           gyro_turn_pid.integral = 0;
+//           gyro_turn_pid.is_first = 1;
+//           gyro_turn_done = 0;
+//           black_line_cnt = 0;
+//           gyro_turn_phase = 0;
+//           black_line_shield_cnt = BLACK_LINE_SHIELD_TIMES;
+//           stop_motor();
+//           second_state = SECOND_UTURN;
+//           beep();
+//           ///log_uprintf(&huart1, "[SECOND] RIGHT cross=%d -> UTURN\n", second_turn_cnt);
+//         } else {
+//           stop_motor();
+//           cross_delay_cnt = CROSS_STOP_MS / 10;
+//           beep();
+//           second_state = SECOND_STOP;
+//           //log_uprintf(&huart1, "[SECOND] RIGHT cross=%d stop=%dms\n", second_turn_cnt, CROSS_STOP_MS);
+//         }
+//       }
+//       break;
+//
+//     case SECOND_CROSSING_IGNORE:
+//       follow(BASE_SPEED);
+//
+//
+//       beep_off();
+//       second_state = SECOND_FOLLOW_LINE;
+//       status.sensor.gw_analogue.cross.cross = Straight;
+//       //status.sensor.gw_analogue.cross.cross_delay = CROSS_SHIELD_TIMES;
+//
+//
+//       break;
+//
+//     case SECOND_STOP:
+//       if (cross_delay_cnt > 0) {
+//         cross_delay_cnt--;
+//       } else {
+//         gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
+//         gyro_turn_pid.integral = 0;
+//         gyro_turn_pid.is_first = 1;
+//         gyro_turn_done = 0;
+//         black_line_cnt = 0;
+//         gyro_turn_phase = 0;
+//         black_line_shield_cnt = BLACK_LINE_SHIELD_TIMES;
+//         beep_off();
+//         second_state = SECOND_TURNING;
+//         log_uprintf(&huart1, "[SECOND] TURNING dir=%d angle=%.0f\n", turn_dir, turn_dir == 0 ? 90.0f : -90.0f);
+//       }
+//       break;
+//
+//     case SECOND_TURNING:
+//       if (black_line_shield_cnt > 0) {
+//         black_line_shield_cnt--;
+//         black_line_cnt = 0;
+//       } else if (status.sensor.gw_analogue.digital_8bit & (turn_dir == 0 ? BLACK_LINE_MASK_LTURN : BLACK_LINE_MASK_RTURN)) {
+//         black_line_cnt++;
+//         if (black_line_cnt >= BLACK_LINE_DETECT_TIMES) {
+//           black_line_cnt = 0;
+//           gyro_turn_pid.integral = 0;
+//           stop_motor();
+//           second_state = SECOND_FOLLOW_LINE;
+//           status.sensor.gw_analogue.cross.cross = Straight;
+//           first_flag = 0;
+//           status.sensor.gw_analogue.cross.cross_delay = GYRO_SHIELD_TIMES;
+//           log_uprintf(&huart1, "[SECOND] Black line detected, switch to FOLLOW_LINE\n");
+//           break;
+//         }
+//       } else {
+//         black_line_cnt = 0;
+//       }
+//       if (gyro_turn_phase == 0) {
+//         if (first_flag)
+//         {
+//           angle_handler(turn_dir == 0 ? 80.0f : -80.0f, GYRO_TURN_ARC);
+//         }else
+//         {
+//           angle_handler(turn_dir == 0 ? 90.0f : -90.0f, GYRO_TURN_ARC);
+//         }
+//
+//         if (gyro_turn_done) {
+//           gyro_turn_done = 0;
+//           gyro_turn_phase = 1;
+//           log_uprintf(&huart1, "[SECOND] Angle reached, constant speed searching line\n");
+//         }
+//       } else {
+//         if (turn_dir == 0) {
+//           status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
+//           status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
+//         } else {
+//           status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
+//           status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
+//         }
+//       }
+//       break;
+//
+//     case SECOND_UTURN: {
+//       // 1. 获取当前陀螺仪角度，并计算相对于转向起点的偏差角度
+//       float cur_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
+//       float diff = cur_angle - gyro_start_angle;
+//
+//       // 角度规范化到 -180 到 180 之间
+//       while (diff > 180.0f) diff -= 360.0f;
+//       while (diff < -180.0f) diff += 360.0f;
+//
+//       // 取绝对值，得到实际已经转过的度数
+//       if (diff < 0) diff = -diff;
+//
+//       // 2. 捕捉转过90度的点，满足条件后开启黑线检测
+//       if (diff >= 90.0f) {
+//         // 使用原有的左转掉头掩码检测黑线
+//         if (status.sensor.gw_analogue.digital_8bit & BLACK_LINE_MASK_LTURN) {
+//           black_line_cnt++;
+//           if (black_line_cnt >= BLACK_LINE_DETECT_TIMES) {
+//             // 确认检测到黑线，清除状态并切换到直线模式
+//             black_line_cnt = 0;
+//             gyro_turn_pid.integral = 0;
+//             stop_motor();
+//
+//             second_state = SECOND_RETURN_FOLLOW;
+//             status.sensor.gw_analogue.cross.cross = Straight;
+//             status.sensor.gw_analogue.cross.cross_delay = GYRO_SHIELD_TIMES;
+//
+//             log_uprintf(&huart1, "[SECOND] UTURN black line detected after 90deg, switch to RETURN_FOLLOW\n");
+//             break; // 成功切线，跳出当前 case
+//           }
+//         } else {
+//           black_line_cnt = 0;
+//         }
+//       }
+//
+//       // 3. 始终使用陀螺仪控制目标转 180 度 (原地打转)
+//       // angle_handler 会在内部自动处理 PID 计算和死区限制
+//       angle_handler(180.0f, GYRO_TURN_PIVOT);
+//
+//       // 4. 清除到位标志位 (防止 PID 锁死在 180 度时不断触发 done)
+//       if (gyro_turn_done) {
+//         gyro_turn_done = 0;
+//       }
+//
+//       break;
+//     }
+//
+//     case SECOND_RETURN_FOLLOW:
+//       follow(BASE_SPEED);
+//       if (road == TLRoad || road == TRRoad || road == CrossRoad || road == TBRoad) {
+//         beep();
+//         second_state = SECOND_RETURN_CROSSING_IGNORE;
+//         cross_delay_cnt = CROSS_DELAY_MS / 10;
+//         log_uprintf(&huart1, "[SECOND] RETURN T/Cross road, ignore\n");
+//       } else if (road == LeftRoad) {
+//         second_return_cnt++;
+//         turn_dir = 0;
+//         if (second_return_cnt >= SECOND_RETURN_CORNERS) {
+//           stop_motor();
+//           reverse_park_cnt = REVERSE_PARK_TIMES;
+//           second_state = SECOND_ARRIVED;
+//           start_blink();
+//           log_uprintf(&huart1, "[SECOND] RETURN LEFT cross=%d -> ARRIVED\n", second_return_cnt);
+//         } else {
+//           stop_motor();
+//           cross_delay_cnt = CROSS_STOP_MS / 10;
+//           beep();
+//           second_state = SECOND_RETURN_STOP;
+//           log_uprintf(&huart1, "[SECOND] RETURN LEFT cross=%d stop=%dms\n", second_return_cnt, CROSS_STOP_MS);
+//         }
+//       } else if (road == RightRoad) {
+//         second_return_cnt++;
+//         turn_dir = 1;
+//         if (second_return_cnt >= SECOND_RETURN_CORNERS) {
+//           stop_motor();
+//           reverse_park_cnt = REVERSE_PARK_TIMES;
+//           second_state = SECOND_ARRIVED;
+//           start_blink();
+//           log_uprintf(&huart1, "[SECOND] RETURN RIGHT cross=%d -> ARRIVED\n", second_return_cnt);
+//         } else {
+//           stop_motor();
+//           cross_delay_cnt = CROSS_STOP_MS / 10;
+//           beep();
+//           second_state = SECOND_RETURN_STOP;
+//           log_uprintf(&huart1, "[SECOND] RETURN RIGHT cross=%d stop=%dms\n", second_return_cnt, CROSS_STOP_MS);
+//         }
+//       }
+//       break;
+//
+//     case SECOND_RETURN_CROSSING_IGNORE:
+//       follow(BASE_SPEED);
+//
+//
+//       beep_off();
+//       second_state = SECOND_RETURN_FOLLOW;
+//       status.sensor.gw_analogue.cross.cross = Straight;
+//         //status.sensor.gw_analogue.cross.cross_delay = CROSS_SHIELD_TIMES;
+//
+//
+//       break;
+//
+//     case SECOND_RETURN_STOP:
+//       if (cross_delay_cnt > 0) {
+//         cross_delay_cnt--;
+//       } else {
+//         gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
+//         gyro_turn_pid.integral = 0;
+//         gyro_turn_pid.is_first = 1;
+//         gyro_turn_done = 0;
+//         black_line_cnt = 0;
+//         gyro_turn_phase = 0;
+//         black_line_shield_cnt = BLACK_LINE_SHIELD_TIMES;
+//         beep_off();
+//         second_state = SECOND_RETURN_TURNING;
+//         log_uprintf(&huart1, "[SECOND] RETURN_TURNING dir=%d angle=%.0f\n", turn_dir, turn_dir == 0 ? 70.0f : -70.0f);
+//       }
+//       break;
+//
+//     case SECOND_RETURN_TURNING:
+//       if (black_line_shield_cnt > 0) {
+//         black_line_shield_cnt--;
+//         black_line_cnt = 0;
+//       } else if (status.sensor.gw_analogue.digital_8bit & (turn_dir == 0 ? BLACK_LINE_MASK_LTURN : BLACK_LINE_MASK_RTURN)) {
+//         black_line_cnt++;
+//         if (black_line_cnt >= BLACK_LINE_DETECT_TIMES) {
+//           black_line_cnt = 0;
+//           gyro_turn_pid.integral = 0;
+//           stop_motor();
+//           second_state = SECOND_RETURN_FOLLOW;
+//           status.sensor.gw_analogue.cross.cross = Straight;
+//           status.sensor.gw_analogue.cross.cross_delay = GYRO_SHIELD_TIMES;
+//           log_uprintf(&huart1, "[SECOND] Black line detected during RETURN_TURN, switch to RETURN_FOLLOW\n");
+//           break;
+//         }
+//       } else {
+//         black_line_cnt = 0;
+//       }
+//       if (gyro_turn_phase == 0) {
+//         angle_handler(turn_dir == 0 ? 90.0f : -90.0f, GYRO_TURN_ARC);
+//         if (gyro_turn_done) {
+//           gyro_turn_done = 0;
+//           gyro_turn_phase = 1;
+//           log_uprintf(&huart1, "[SECOND] RETURN_TURN angle reached, constant speed searching line\n");
+//         }
+//       } else {
+//         if (turn_dir == 0) {
+//           status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
+//           status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
+//         } else {
+//           status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
+//           status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
+//         }
+//       }
+//       break;
+//
+//     case SECOND_RETURN_GYRO_TURN:
+//       if (black_line_shield_cnt > 0) {
+//         black_line_shield_cnt--;
+//         black_line_cnt = 0;
+//       } else if (status.sensor.gw_analogue.digital_8bit & (turn_dir == 0 ? BLACK_LINE_MASK_LTURN : BLACK_LINE_MASK_RTURN)) {
+//         black_line_cnt++;
+//         if (black_line_cnt >= BLACK_LINE_DETECT_TIMES) {
+//           black_line_cnt = 0;
+//           gyro_turn_pid.integral = 0;
+//           stop_motor();
+//           reverse_park_cnt = REVERSE_PARK_TIMES;
+//           second_state = SECOND_ARRIVED;
+//           start_blink();
+//           log_uprintf(&huart1, "[SECOND] RETURN GYRO_TURN black line detected, ARRIVED\n");
+//           break;
+//         }
+//       } else {
+//         black_line_cnt = 0;
+//       }
+//       if (gyro_turn_phase == 0) {
+//         angle_handler(turn_dir == 0 ? 90.0f : -90.0f, GYRO_TURN_ARC);
+//         if (gyro_turn_done) {
+//           gyro_turn_done = 0;
+//           gyro_turn_phase = 1;
+//           log_uprintf(&huart1, "[SECOND] RETURN GYRO_TURN angle reached, constant speed searching line\n");
+//         }
+//       } else {
+//         if (turn_dir == 0) {
+//           status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
+//           status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
+//         } else {
+//           status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
+//           status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
+//         }
+//       }
+//       break;
+//
+//     case SECOND_ARRIVED:
+//       if (reverse_park_cnt > 0) {
+//         reverse_park_cnt--;
+//         status.motor.wheel[0].tar_speed = -BASE_SPEED / 2;
+//         status.motor.wheel[1].tar_speed = -BASE_SPEED / 2;
+//       } else {
+//         stop_motor();
+//         run_state = FINISHED;
+//       }
+//       break;
+//   }
+// }
+//
+// uint8_t first_dir;
+// void third_mode_handler() {
+//   Road road = status.sensor.gw_analogue.cross.cross;
+//
+//   switch (third_state) {
+//     case THIRD_INIT_TURN:
+//       gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
+//       gyro_turn_pid.integral = 0;
+//       gyro_turn_pid.is_first = 1;
+//       gyro_turn_done = 0;
+//       black_line_cnt = 0;
+//       gyro_turn_phase = 0;
+//       first_flag = 1;
+//       first_dir = turn_dir;
+//       black_line_shield_cnt = BLACK_LINE_INIT_SHIELD_TIMES;
+//       third_state = THIRD_TURNING;
+//       // log_uprintf(&huart1, "[THIRD] INIT_TURN dir=%d (L=%d R=%d)\n",
+//       //             turn_dir,
+//       //             (status.sensor.gw_analogue.digital_8bit & 0x80) ? 1 : 0,
+//       //             (status.sensor.gw_analogue.digital_8bit & 0x01) ? 1 : 0);
+//       break;
+//
+//     case THIRD_FOLLOW_LINE:
+//
+//       follow(third_params.base_speed);
+//
+//       if (road == TLRoad || road == TRRoad || road == CrossRoad || road == TBRoad) {
+//         beep();
+//         third_state = THIRD_CROSSING_IGNORE;
+//         cross_delay_cnt = third_params.cross_delay_ms / 10;
+//         // log_uprintf(&huart1, "[THIRD] T/Cross road, ignore\n");
+//       } else if (road == LeftRoad) {
+//         third_cross_cnt++;
+//         turn_dir = 0;
+//         if (third_cross_cnt >= 4) {
+//           stop_motor();
+//           reverse_park_cnt = REVERSE_PARK_TIMES;
+//           third_state = THIRD_ARRIVED;
+//           start_blink();
+//           // log_uprintf(&huart1, "[THIRD] ARRIVED cross=%d\n", third_cross_cnt);
+//         } else {
+//           stop_motor();
+//           cross_delay_cnt = third_params.cross_stop_ms / 10;
+//           beep();
+//           third_state = THIRD_STOP;
+//           //log_uprintf(&huart1, "[THIRD] LEFT cross=%d stop=%dms\n", third_cross_cnt, third_params.cross_stop_ms);
+//         }
+//       } else if (road == RightRoad) {
+//         third_cross_cnt++;
+//         turn_dir = 1;
+//         if (third_cross_cnt >= 4) {
+//           stop_motor();
+//           reverse_park_cnt = REVERSE_PARK_TIMES;
+//           third_state = THIRD_ARRIVED;
+//           start_blink();
+//           //log_uprintf(&huart1, "[THIRD] ARRIVED cross=%d\n", third_cross_cnt);
+//         } else {
+//           stop_motor();
+//           cross_delay_cnt = third_params.cross_stop_ms / 10;
+//           beep();
+//           third_state = THIRD_STOP;
+//           //log_uprintf(&huart1, "[THIRD] RIGHT cross=%d stop=%dms\n", third_cross_cnt, third_params.cross_stop_ms);
+//         }
+//       }
+//       break;
+//
+//     case THIRD_CROSSING_IGNORE:
+//       follow(third_params.base_speed);
+//       beep_off();
+//       third_state = THIRD_FOLLOW_LINE;
+//       status.sensor.gw_analogue.cross.cross = Straight;
+//           //status.sensor.gw_analogue.cross.cross_delay = third_params.cross_shield_times;
+//
+//
+//       break;
+//
+//     case THIRD_STOP:
+//       if (cross_delay_cnt > 0) {
+//         cross_delay_cnt--;
+//       } else {
+//         gyro_start_angle = get_gyr_value(&status.sensor.gyr, gyr_z_yaw);
+//         gyro_turn_pid.integral = 0;
+//         gyro_turn_pid.is_first = 1;
+//         gyro_turn_done = 0;
+//         black_line_cnt = 0;
+//         gyro_turn_phase = 0;
+//         black_line_shield_cnt = BLACK_LINE_SHIELD_TIMES;
+//         beep_off();
+//         third_state = THIRD_TURNING;
+//         log_uprintf(&huart1, "[THIRD] TURNING dir=%d angle=%.0f\n", turn_dir, turn_dir == 0 ? 70.0f : -70.0f);
+//       }
+//       break;
+//
+//     case THIRD_TURNING:
+//       if (black_line_shield_cnt > 0) {
+//         black_line_shield_cnt--;
+//         black_line_cnt = 0;
+//       } else if (status.sensor.gw_analogue.digital_8bit & (turn_dir == 0 ? BLACK_LINE_MASK_LTURN : BLACK_LINE_MASK_RTURN)) {
+//         black_line_cnt++;
+//         if (black_line_cnt >= BLACK_LINE_DETECT_TIMES) {
+//           black_line_cnt = 0;
+//           gyro_turn_pid.integral = 0;
+//           stop_motor();
+//           third_state = THIRD_FOLLOW_LINE;
+//           status.sensor.gw_analogue.cross.cross = Straight;
+//           status.sensor.gw_analogue.cross.cross_delay = GYRO_SHIELD_TIMES;
+//           log_uprintf(&huart1, "[THIRD] Black line detected, switch to FOLLOW_LINE\n");
+//           break;
+//         }
+//       } else {
+//         black_line_cnt = 0;
+//       }
+//       if (gyro_turn_phase == 0) {
+//         if (first_flag)
+//         {
+//           angle_handler(turn_dir == 0 ? 80.0f : -80.0f, GYRO_TURN_ARC);
+//         }else
+//         {
+//           angle_handler(turn_dir == 0 ? 90.0f : -90.0f, GYRO_TURN_ARC);
+//         }
+//
+//         if (gyro_turn_done) {
+//           gyro_turn_done = 0;
+//           gyro_turn_phase = 1;
+//           log_uprintf(&huart1, "[THIRD] Angle reached, constant speed searching line\n");
+//         }
+//       } else {
+//         if (turn_dir == 0) {
+//           status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
+//           status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
+//         } else {
+//           status.motor.wheel[0].tar_speed = GYRO_BASE_SPEED + GYRO_TURN_CONST_SPEED;
+//           status.motor.wheel[1].tar_speed = GYRO_BASE_SPEED - GYRO_TURN_CONST_SPEED;
+//         }
+//       }
+//       break;
+//
+//     case THIRD_ARRIVED:
+//       if (reverse_park_cnt > 0) {
+//         reverse_park_cnt--;
+//         status.motor.wheel[0].tar_speed = -third_params.base_speed / 2;
+//         status.motor.wheel[1].tar_speed = -third_params.base_speed / 2;
+//       } else {
+//         stop_motor();
+//         run_state = FINISHED;
+//       }
+//       break;
+//   }
+// }
 
 #if 1
 
@@ -1003,25 +1003,25 @@ void task_handler() {
       break;
 
     case RUNNING:
-      if (is_first)
-      {
-        status.sensor.gw_analogue.diff = 0;
-        status.motor.wheel[0].tar_speed = 0;
-        status.motor.wheel[1].tar_speed = 0;
-        status.motor.wheel[0].wheel_pid.integral = 0;
-        status.motor.wheel[1].wheel_pid.integral = 0;
-      }
-      is_first = 0;
+      // if (is_first)
+      // {
+      //   status.sensor.gw_analogue.diff = 0;
+      //   status.motor.wheel[0].tar_speed = 0;
+      //   status.motor.wheel[1].tar_speed = 0;
+      //   status.motor.wheel[0].wheel_pid.integral = 0;
+      //   status.motor.wheel[1].wheel_pid.integral = 0;
+      // }
+      // is_first = 0;
       switch (mode) {
         case first:
-          first_mode_handler();
+          // first_mode_handler();
           break;
         case second:
-          second_mode_handler();
+          // second_mode_handler();
           break;
         case third:
           //set_pid(&status.sensor.gw_analogue.gw_analogue_pid, 0.4,0,0.25);
-          third_mode_handler();
+          // third_mode_handler();
           break;
         case fourth:
           break;
