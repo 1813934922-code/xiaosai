@@ -219,29 +219,21 @@ void first_mode_handler() {
   // 确保平衡控制被彻底关闭，交出底层电机控制权
   pendulum_ctrl.state = PEND_STOP;
 
-  // 终点检测：全白防抖逻辑
-  static uint8_t all_white_cnt = 0;
-
-  // 如果8个探头都没压到黑线 (digital_8bit == 0x00)
-  if (status.sensor.gw_analogue.digital_8bit == 0x00) {
-    all_white_cnt++;
-  } else {
-    all_white_cnt = 0; // 一旦碰到一点黑线，立刻清零
-  }
-
-  // 连续3次(15ms)读到全白，确认车头已驶出B点
-  if (all_white_cnt >= 1) {
-    first_statu = first_stop;
-  }
+  int32_t avg_ticks = (ABS(status.motor.wheel[0].total_ticks) + ABS(status.motor.wheel[1].total_ticks)) / 2;
 
   switch (first_statu) {
   case forward:
-    follow(40); // 基础速度设为 40 RPM
+    if (avg_ticks < 2900) {
+      follow(40);         // 阶段 1：以 40 RPM 正常巡航
+    } else if (avg_ticks >= 2900 && avg_ticks < 3500) {
+      follow(15);         // 阶段 2：逼近 1 米时，降速到 15 RPM，防止惯性滑行超调
+    } else {
+      first_statu = first_stop; // 阶段 3：达到 7524 脉冲，触发停车
+    }
     break;
   case first_stop:
     stop_motor();         // 普通车，直接切断动力刹车
     run_state = FINISHED;
-    all_white_cnt = 0;    // 状态机重置，为下次运行做准备
     break;
   }
 }
@@ -276,6 +268,7 @@ void task_handler() {
           beep_off();
           status.device.led2.on = 0;
           status.device.led3.on = 0;
+
           run_state = RUNNING;
           cross_cnt = 0;
 
@@ -299,6 +292,8 @@ void task_handler() {
           status.sensor.gw_analogue.diff = 0;
           status.motor.wheel[0].wheel_pid.integral = 0;
           status.motor.wheel[1].wheel_pid.integral = 0;
+          status.motor.wheel[0].total_ticks = 0;
+          status.motor.wheel[1].total_ticks = 0;
           log_uprintf(&huart1, "[FIRST] COUNTDOWN done, dir=%d (L=%d R=%d)\n",
                       turn_dir,
                       (status.sensor.gw_analogue.digital_8bit & 0x80) ? 1 : 0,

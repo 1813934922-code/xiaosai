@@ -24,6 +24,7 @@ typedef struct WHEEL {
   int16_t tar_speed;
   int8_t dir;
   PID wheel_pid;
+  int32_t total_ticks;
 } WHEEL;
 
 // 更新轮子当前速度至状态树： status.motor.wheel[0].cur_speed = get_wheel_speed(&status->motor.wheel[0]);

@@ -14,11 +14,11 @@ void init_pendulum(void) {
     // 直立环: PD控制 (极速响应，不需要积分)
     pendulum_ctrl.upright_pid = init_pid(105.0f, 0.0f, 5.0f, 5.0f, 5000);
     // 速度环: PI控制 (正反馈机制，缓慢拉回原点，不需要微分)
-    pendulum_ctrl.speed_pid   = init_pid(3.5f, 0.035f, 0.0f, 5.0f, 10000);
+    pendulum_ctrl.speed_pid   = init_pid(3.5f, 0.0375f, 0.0f, 5.0f, 10000);
     // 寻迹环: PD控制 (普通循迹)
     pendulum_ctrl.turn_pid    = init_pid(10.0f, 0.0f, 2.0f, 5.0f, 1000);
 
-    pendulum_ctrl.mech_zero = -0.055f; // 硬件校准置零后，这里填0.0f即可
+    pendulum_ctrl.mech_zero = -0.035f; // 硬件校准置零后，这里填0.0f即可
     pendulum_ctrl.target_speed = 0.0f;
     pendulum_ctrl.state = PEND_STOP; // 默认停机
 }
@@ -32,58 +32,70 @@ void update_pendulum_control(void) {
     float current_angle = get_gyr_value(&status.sensor.gyr, gyr_x_roll) - pendulum_ctrl.mech_zero;
     float current_gyro  = get_gyr_value(&status.sensor.gyr, gyr_w_x);
 
-    // ================= 状态1：开环两段式甩鞭起摆 =================
+    // ================= 状态1：能量共振起摆 (荡秋千 + 无限重试) =================
     if (pendulum_ctrl.state == PEND_SWING_UP) {
-        static uint8_t swing_step = 0;
-        static uint16_t swing_timer = 0;
+        static uint8_t swing_step = 0;       // 0:向后推, 1:向前冲, 2:循环结束等待接管
+        static uint8_t swing_count = 0;      // 已经完成的完整循环次数 (0, 1, 2)
+        static uint16_t swing_timer = 0;     // 当前动作计时器
+        static int16_t current_thrust = 600; // 初始最大推力
+        static uint16_t total_timer = 0;     // 总超时保护计时器
 
-        float catch_angle = 6.0f; // 闭环接管阈值 (±6度)
+        // 【调参点】：每次推拉的持续时间 (例如 40 * 5ms = 200ms)
+        const uint16_t PHASE_TIME = 100;
+        float catch_angle = 6.0f;            // 闭环接管阈值 (±6度)
 
-        // [阶段1]：反向蓄力，把靠在支架上的摆杆“拖”下来
-        if (swing_step == 0) {
-            // 假设：摆杆在后侧(角度为负)，这里给负推力让车后退
-            status.motor.wheel[0].trust = -350;
-            status.motor.wheel[1].trust = -350;
+        if (swing_step < 2) {
+            if (swing_step == 0) {
+                status.motor.wheel[0].trust = -current_thrust;
+                status.motor.wheel[1].trust = -current_thrust;
+            } else {
+                status.motor.wheel[0].trust = current_thrust;
+                status.motor.wheel[1].trust = current_thrust;
+            }
 
             swing_timer++;
-
-            // 触发条件：摆杆脱离支架往下掉(比如到达-8度)，或超时强行进入下一段
-            if (current_angle > -8.0f || swing_timer > 20) { // 200*5ms = 1秒
-                swing_step = 1;
+            if (swing_timer >= PHASE_TIME) {
                 swing_timer = 0;
+                if (swing_step == 0) {
+                    swing_step = 1;
+                } else {
+                    swing_count++;
+                    if (swing_count >= 1) {
+                        swing_step = 2;
+                    } else {
+                        current_thrust = (int16_t)(current_thrust * 1.0f); // 衰减推力
+                        swing_step = 0;
+                    }
+                }
             }
         }
-        // [阶段2]：正向爆发，迎头痛击甩起摆杆
-        else if (swing_step == 1) {
-            // 满功率向前猛冲 (需根据轮胎抓地力调整，防打滑)
-            status.motor.wheel[0].trust = 800;
-            status.motor.wheel[1].trust = 800;
+        else if (swing_step == 2) {
+            status.motor.wheel[0].trust = current_thrust;
+            status.motor.wheel[1].trust = current_thrust;
 
-            swing_timer++;
-
-            // 成功接管条件：角度甩进了 ±6 度以内
+            // 成功接管条件
             if (current_angle > -catch_angle && current_angle < catch_angle) {
-                pendulum_ctrl.speed_pid.integral = 0; // 清空速度环积分，防疯跑
-                pendulum_ctrl.state = PEND_BALANCING; // 成功！移交PID闭环控制权
-                swing_step = 0;
-                swing_timer = 0;
+                pendulum_ctrl.speed_pid.integral = 0;
+                pendulum_ctrl.upright_pid.integral = 0;
+                pendulum_ctrl.state = PEND_BALANCING;
+
+                // 复位静态变量
+                swing_step = 0; swing_count = 0; swing_timer = 0; current_thrust = 800; total_timer = 0;
             }
-            // // 失败保护：如果在冲刺阶段0.8秒都没甩上来，说明力量不够，强行停机防撞
-            // else if (swing_timer > 160) {
-            //     stop_motor();
-            //     pendulum_ctrl.state = PEND_STOP;
-            //     swing_step = 0;
-            //     swing_timer = 0;
-            // }
         }
 
-        // 起摆阶段直接下发驱动并退出，不执行下方闭环算法
+        // 永不言弃机制：挣扎超过 4 秒 (800*5ms) 还没接住，直接重新开始新一轮甩鞭！
+        total_timer++;
+        if (total_timer > 800) {
+            swing_step = 0; swing_count = 0; swing_timer = 0; current_thrust = 800; total_timer = 0;
+        }
+
         driver_wheel(&status.motor.wheel[0]);
         driver_wheel(&status.motor.wheel[1]);
         return;
     }
 
-    // ================= 状态2：闭环平衡与寻迹 =================
+    // ================= 状态2：闭环平衡与寻迹 (保留你原本的代码) =================
     if (pendulum_ctrl.state == PEND_BALANCING) {
 
         // 1. 直立环 (PD)

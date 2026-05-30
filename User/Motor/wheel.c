@@ -13,6 +13,10 @@ float get_wheel_speed(WHEEL *wheel) {
     TIM2->CNT = 30000;
   }
   encoder_ticks = encoder_ticks * wheel->dir;
+
+  // <--- 新增：累加每次计算的脉冲数，记录总位移
+  wheel->total_ticks += encoder_ticks;
+
   return (float)encoder_ticks * 60.0f * PID_HZ / MOTOR_REDUCTION;
 }
 
@@ -55,6 +59,7 @@ void init_wheel(WHEEL *wheel, uint8_t which, int8_t dir) {
   wheel->cur_speed = 0;
   wheel->tar_speed = 0;
   wheel->dir = dir;
+  wheel->total_ticks = 0; // <--- 新增：初始化累计脉冲为 0
   wheel->wheel_pid = init_pid(1, 1, 1, 5, 5000);
 
   if (wheel->which == 1) {
