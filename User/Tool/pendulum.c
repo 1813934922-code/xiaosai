@@ -18,7 +18,7 @@ void init_pendulum(void) {
     // 寻迹环: PD控制 (普通循迹)
     pendulum_ctrl.turn_pid    = init_pid(10.0f, 0.0f, 2.0f, 5.0f, 1000);
 
-    pendulum_ctrl.mech_zero = -0.035f; // 硬件校准置零后，这里填0.0f即可
+    pendulum_ctrl.mech_zero = -2.6f; // 硬件校准置零后，这里填0.0f即可
     pendulum_ctrl.target_speed = 0.0f;
     pendulum_ctrl.state = PEND_STOP; // 默认停机
 }
@@ -103,9 +103,11 @@ void update_pendulum_control(void) {
                                     pendulum_ctrl.upright_pid.kd * current_gyro;
         //pendulum_ctrl.out_upright = 0;
         // 2. 速度环 (PI)
-        float avg_speed = (status.motor.wheel[0].cur_speed + status.motor.wheel[1].cur_speed) / 2.0f;
-        float speed_error = pendulum_ctrl.target_speed - avg_speed;
+        float current_avg_speed = (status.motor.wheel[0].cur_speed + status.motor.wheel[1].cur_speed) / 2.0f;
+        static float speed_filter = 0.0f;
+        speed_filter = speed_filter * 0.7f + current_avg_speed * 0.3f; // 0.7/0.3的平滑权重
 
+        float speed_error = pendulum_ctrl.target_speed - speed_filter;
         pendulum_ctrl.out_speed = compute_pid(&pendulum_ctrl.speed_pid, speed_error);
         //pendulum_ctrl.out_speed = 0;
         // 3. 寻迹转向环 (PD)
