@@ -12,13 +12,13 @@ PENDULUM_CTRL pendulum_ctrl;
 void init_pendulum(void) {
     // 1. 初始化三个环的 PID (参数需上车实调)
     // 直立环: PD控制 (极速响应，不需要积分)
-    pendulum_ctrl.upright_pid = init_pid(126.0f, 0.0f, 6.0f, 5.0f, 5000);
+    pendulum_ctrl.upright_pid = init_pid(105.0f, 0.0f, 5.0f, 5.0f, 5000);
     // 速度环: PI控制 (正反馈机制，缓慢拉回原点，不需要微分)
-    pendulum_ctrl.speed_pid   = init_pid(15.0f, 0.5f, 0.0f, 5.0f, 2000);
+    pendulum_ctrl.speed_pid   = init_pid(3.5f, 0.035f, 0.0f, 5.0f, 10000);
     // 寻迹环: PD控制 (普通循迹)
     pendulum_ctrl.turn_pid    = init_pid(10.0f, 0.0f, 2.0f, 5.0f, 1000);
 
-    pendulum_ctrl.mech_zero = 0.0f; // 硬件校准置零后，这里填0.0f即可
+    pendulum_ctrl.mech_zero = -0.055f; // 硬件校准置零后，这里填0.0f即可
     pendulum_ctrl.target_speed = 0.0f;
     pendulum_ctrl.state = PEND_STOP; // 默认停机
 }
@@ -48,7 +48,7 @@ void update_pendulum_control(void) {
             swing_timer++;
 
             // 触发条件：摆杆脱离支架往下掉(比如到达-8度)，或超时强行进入下一段
-            if (current_angle > -8.0f || swing_timer > 200) { // 200*5ms = 1秒
+            if (current_angle > -8.0f || swing_timer > 20) { // 200*5ms = 1秒
                 swing_step = 1;
                 swing_timer = 0;
             }
@@ -56,8 +56,8 @@ void update_pendulum_control(void) {
         // [阶段2]：正向爆发，迎头痛击甩起摆杆
         else if (swing_step == 1) {
             // 满功率向前猛冲 (需根据轮胎抓地力调整，防打滑)
-            status.motor.wheel[0].trust = 500;
-            status.motor.wheel[1].trust = 500;
+            status.motor.wheel[0].trust = 800;
+            status.motor.wheel[1].trust = 800;
 
             swing_timer++;
 
@@ -89,20 +89,20 @@ void update_pendulum_control(void) {
         // 1. 直立环 (PD)
         pendulum_ctrl.out_upright = pendulum_ctrl.upright_pid.kp * current_angle +
                                     pendulum_ctrl.upright_pid.kd * current_gyro;
-
+        //pendulum_ctrl.out_upright = 0;
         // 2. 速度环 (PI)
         float avg_speed = (status.motor.wheel[0].cur_speed + status.motor.wheel[1].cur_speed) / 2.0f;
         float speed_error = pendulum_ctrl.target_speed - avg_speed;
 
-        //pendulum_ctrl.out_speed = compute_pid(&pendulum_ctrl.speed_pid, speed_error);
-        pendulum_ctrl.out_speed = 0;
+        pendulum_ctrl.out_speed = compute_pid(&pendulum_ctrl.speed_pid, speed_error);
+        //pendulum_ctrl.out_speed = 0;
         // 3. 寻迹转向环 (PD)
         //pendulum_ctrl.out_turn = compute_pid(&pendulum_ctrl.turn_pid, status.sensor.gw_analogue.diff);
         pendulum_ctrl.out_turn = 0;
         // 4. 三环输出融合
         // 极性注意：必须确保向前方倾倒时(车要往前加速)，final的算力结果是让车轮向前的PWM
-        int16_t final_L = (int16_t)(-1*(pendulum_ctrl.out_upright - pendulum_ctrl.out_speed + pendulum_ctrl.out_turn));
-        int16_t final_R = (int16_t)(-1*(pendulum_ctrl.out_upright - pendulum_ctrl.out_speed - pendulum_ctrl.out_turn));
+        int16_t final_L = (int16_t)(-1*(pendulum_ctrl.out_upright + pendulum_ctrl.out_speed + pendulum_ctrl.out_turn));
+        int16_t final_R = (int16_t)(-1*(pendulum_ctrl.out_upright + pendulum_ctrl.out_speed - pendulum_ctrl.out_turn));
 
         // 覆盖 trust (PWM占空比)
         status.motor.wheel[0].trust = final_L;
